@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Screen Recorder Pro</string>
+    <string name="record">تسجيل</string>
+    <string name="stop">إيقاف</string>
+    <string name="pause">إيقاف مؤقت</string>
+    <string name="resume">استئناف</string>
+    <string name="settings">الإعدادات</string>
+    <string name="gallery">المعرض</string>
+    <string name="recording_fps">معدل الإطارات</string>
+    <string name="video_bitrate">جودة الفيديو</string>
+    <string name="audio_source">مصدر الصوت</string>
+    <string name="resolution">الدقة</string>
+    <string name="show_touches">إظهار اللمسات</string>
+    <string name="floating_controls">أزرار التحكم العائمة</string>
+    <string name="countdown">العد التنازلي</string>
+    <string name="save_location">موقع الحفظ</string>
+    <string name="notification_channel">قناة الإشعارات</string>
+</resources>
