@@ -11,3 +11,6 @@ https://github.com/lahcenmohmmad-hash/ScreenRecorderPro/releases/latest/download
 الإعدادات ← تحويل النص إلى كلام ← Google ← تثبيت بيانات الصوت ← English.
 
 يُبنى الـAPK تلقائياً عند كل تعديل على main عبر GitHub Actions.
+
+## القاموس المدمج
+المعاني والأمثلة تأتي من **Princeton WordNet 3.1** (رخصة WordNet: https://wordnet.princeton.edu/license-and-commercial-use) وتُدمج داخل التطبيق عند البناء، فتعمل بدون إنترنت.
