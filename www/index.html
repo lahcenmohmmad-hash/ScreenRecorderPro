@@ -4,7 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#4f46e5">
-<link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>SpellMaster – متقن الإملاء</title>
@@ -59,9 +58,10 @@ const save=()=>{try{localStorage.setItem('sm1',JSON.stringify(S))}catch(e){}};
 const shuf=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
 let tab='p',ses=null,cur=null,lc=null,voice=null;
 /* ---------- الصوت (صوت الهاتف المحلي – بدون إنترنت) ---------- */
-function pickVoice(){try{const v=speechSynthesis.getVoices().filter(x=>/^en/i.test(x.lang));voice=v.find(x=>x.localService&&/en[-_]US/i.test(x.lang))||v.find(x=>x.localService)||v[0]||null}catch(e){}return voice}
+const NT=()=>window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform()&&Capacitor.Plugins&&Capacitor.Plugins.TextToSpeech;let nok=null;
+function pickVoice(){if(NT())return nok===false?null:{name:'صوت الهاتف',localService:true};try{const v=speechSynthesis.getVoices().filter(x=>/^en/i.test(x.lang));voice=v.find(x=>x.localService&&/en[-_]US/i.test(x.lang))||v.find(x=>x.localService)||v[0]||null}catch(e){}return voice}
 try{speechSynthesis.onvoiceschanged=pickVoice}catch(e){}
-function say(t,r){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang=voice?voice.lang:'en-US';if(voice)u.voice=voice;u.rate=r||S.rate||.85;speechSynthesis.speak(u)}catch(e){}}
+function say(t,r){const T=NT();if(T){T.speak({text:t,lang:'en-US',rate:r||S.rate||.85,pitch:1,volume:1,category:'playback'}).catch(()=>toast('تعذّر النطق – ثبّت الصوت الإنجليزي'));return}try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang=voice?voice.lang:'en-US';if(voice)u.voice=voice;u.rate=r||S.rate||.85;speechSynthesis.speak(u)}catch(e){}}
 function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.append(d);setTimeout(()=>d.remove(),2200)}
 async function getDef(w){if(w.d!==undefined)return w.d;if(!navigator.onLine)return null;try{const j=await(await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/'+w.w)).json(),m=j[0].meanings[0],df=m.definitions[0];w.d=m.partOfSpeech+': '+df.definition;w.e=df.example||'';save();return w.d}catch(e){return null}}
 /* ---------- التكرار المتباعد ---------- */
@@ -135,13 +135,14 @@ case'wsay':say(W().w);break;
 case'wmv':{const w=W();mv(w,w.m==='d'?'l':'d');vW();break}
 case'wdel':S.words=S.words.filter(x=>x.id!==id);save();vW();break;
 case'test':say('Hello, this is a test');break;
-case'exp':{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(S)],{type:'application/json'}));a.download='spellmaster-backup.json';a.click();break}
-case'imp':$('#fi').click();break;
+case'exp':{if(NT()){navigator.clipboard.writeText(JSON.stringify(S)).then(()=>toast('تم نسخ النسخة الاحتياطية – الصقها في ملاحظات'),()=>toast('تعذّر النسخ'));break}const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(S)],{type:'application/json'}));a.download='spellmaster-backup.json';a.click();break}
+case'imp':if(NT()){const t=prompt('الصق النسخة الاحتياطية هنا');if(t)impT(t)}else $('#fi').click();break;
 case'rst':if(confirm('مسح كل الكلمات والتقدّم؟')){S={words:[],streak:0,last:0,log:{},rate:.85};save();render()}break}});
 document.addEventListener('input',e=>{if(e.target.id==='rt'){S.rate=+e.target.value;save()}});
-$('#fi').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const j=JSON.parse(r.result);if(!Array.isArray(j.words))throw 0;S=Object.assign(S,j);save();toast('تم الاستيراد');render()}catch(x){toast('ملف غير صالح')}};r.readAsText(f)});
-if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+function impT(t){try{const j=JSON.parse(t);if(!Array.isArray(j.words))throw 0;S=Object.assign(S,j);save();toast('تم الاستيراد');render()}catch(x){toast('نسخة غير صالحة')}}
+$('#fi').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>impT(r.result);r.readAsText(f)});
 pickVoice();render();
+if(NT())NT().isLanguageSupported({lang:'en-US'}).then(r=>{nok=r.supported;render()}).catch(()=>{});
 </script>
 </body>
 </html>
