@@ -61,7 +61,7 @@ const save=()=>{try{localStorage.setItem('sm1',JSON.stringify(S))}catch(e){}};
 const shuf=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
 let tab='p',ses=null,cur=null,lc=null,voice=null;
 /* ---------- الصوت ---------- */
-const NT=()=>window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform()&&Capacitor.Plugins&&Capacitor.Plugins.TextToSpeech;let nok=null;
+const NT=()=>{const C=window.Capacitor;if(!(C&&C.nativePromise&&C.isNativePlatform&&C.isNativePlatform()))return null;return NT.p||(NT.p={speak:o=>C.nativePromise('TextToSpeech','speak',o),isLanguageSupported:o=>C.nativePromise('TextToSpeech','isLanguageSupported',o)})};let nok=null;
 function pickVoice(){if(NT())return nok===false?null:{name:'صوت الهاتف',localService:true};try{const v=speechSynthesis.getVoices().filter(x=>/^en/i.test(x.lang));voice=v.find(x=>x.localService&&/en[-_]US/i.test(x.lang))||v.find(x=>x.localService)||v[0]||null}catch(e){}return voice}
 try{speechSynthesis.onvoiceschanged=pickVoice}catch(e){}
 function say(t,r){const T=NT();if(T){T.speak({text:t,lang:'en-US',rate:r||S.rate||.85,pitch:1,volume:1,category:'playback'}).catch(()=>toast('تعذّر النطق – ثبّت الصوت الإنجليزي'));return}try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang=voice?voice.lang:'en-US';if(voice)u.voice=voice;u.rate=r||S.rate||.85;speechSynthesis.speak(u)}catch(e){}}
@@ -102,7 +102,7 @@ function render(){document.querySelectorAll('nav button').forEach(b=>b.classList
 /* ---------- التمرين ---------- */
 function vP(){if(cur)return vQ();if(ses&&ses.done)return vEnd();
 const n=dn(),d=S.words.filter(w=>w.m==='d'),due=d.filter(w=>w.due<=n).length;
-M(`${!pickVoice()?'<div class="card" style="border-color:var(--bad)">⚠️ لم أجد صوتاً إنجليزياً. ثبّت بيانات الصوت الإنجليزي من إعدادات الهاتف ← تحويل النص إلى كلام، ليعمل النطق بدون إنترنت.</div>':''}
+M(`${!pickVoice()?'<div class="card" style="border-color:var(--bad)">⚠️ محرك النطق في هاتفك لا يملك صوتاً إنجليزياً. من الإعدادات ← اللغة والإدخال (أو إعدادات إضافية) ← إخراج تحويل النص إلى كلام ← محرك Google ← ⚙️ ← تثبيت بيانات الصوت ← English. (هذا غير «الكتابة بالصوت».)</div>':''}
 <div class="card" style="text-align:center"><div class="tag">🔥 ${S.streak} يوم متتالي</div><div class="big" style="font-size:60px">${due}</div><p>${due?'كلمة مستحقة للمراجعة اليوم':d.length?'لا شيء مستحق اليوم 🎉':'لا توجد كلمات إملاء بعد'}</p>
 <button class="btn" style="width:100%" data-a="${due?'start':d.length?'force':'goW'}">${due?'ابدأ التمرين':d.length?'تدرّب على أي حال':'أضف كلمات'}</button></div>`)}
 function startSession(force){const n=dn();let q=S.words.filter(w=>w.m==='d'&&(force||w.due<=n));q=shuf(q).slice(0,20).map(w=>w.id);if(!q.length)return toast('لا توجد كلمات');ses={q,i:0,ok:0,bad:0,rt:{}};nextQ()}
@@ -141,7 +141,7 @@ M(`<div class="card"><div class="row" style="text-align:center"><div><div class=
 <div class="card">الكلمات: ${S.words.length} (حفظ ${S.words.length-d.length} · إملاء ${d.length}) · مستحقة اليوم: ${d.filter(w=>w.due<=n).length}</div>
 <div class="card"><b>🔍 أنماط أخطائك</b>${top.length?top.map(([k,v])=>`<div>${EN[k]||k} — ${v}</div>`).join(''):'<div class="mu">لا أخطاء بعد 👌</div>'}</div>
 <div class="card"><b>🧠 نسبة التذكّر المستهدفة:</b> <span id="rv">${Math.round(S.ret*100)}%</span><br><input type="range" id="rr" min="80" max="95" value="${Math.round(S.ret*100)}" style="width:100%"><div class="mu">أعلى = مراجعات أكثر وحفظ أقوى. المعتمد 90%.</div></div>
-<div class="card"><b>الصوت:</b> ${voice?'✅ '+voice.name+(voice.localService?' (محلي – بدون إنترنت)':' ⚠️ قد يحتاج إنترنت'):'⚠️ لا يوجد صوت إنجليزي – ثبّته من إعدادات الهاتف ← تحويل النص إلى كلام'}<br><br>السرعة <input type="range" id="rt" min=".4" max="1.1" step=".05" value="${S.rate}"> <button class="btn g" data-a="test">جرّب</button></div>
+<div class="card"><b>الصوت:</b> ${voice?'✅ '+voice.name+(voice.localService?' (محلي – بدون إنترنت)':' ⚠️ قد يحتاج إنترنت'):'⚠️ لا يوجد صوت إنجليزي في محرك النطق – ثبّته من إعدادات الهاتف ← إخراج تحويل النص إلى كلام'}<br><br>السرعة <input type="range" id="rt" min=".4" max="1.1" step=".05" value="${S.rate}"> <button class="btn g" data-a="test">جرّب</button></div>
 <div class="card row"><button class="btn g" data-a="exp">تصدير</button><button class="btn g" data-a="imp">استيراد</button><button class="btn g" data-a="rst" style="color:var(--bad)">مسح الكل</button></div><div class="mu" style="font-size:11px;text-align:center">القاموس المدمج: Princeton WordNet 3.1</div>`)}
 /* ---------- الأحداث ---------- */
 document.addEventListener('click',e=>{
