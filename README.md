@@ -17,3 +17,5 @@ https://github.com/lahcenmohmmad-hash/ScreenRecorderPro/releases/latest/download
 
 ## المعاني العربية (بدون إنترنت)
 مصدرها قاموس **en-ar** من مشروع koreader-dicts (https://github.com/DanielGregorini/koreader-dicts)، الإصدار v1.3.0، ورخصته **CC BY-SA 4.0**. وهو مبني على ويكاموس الإنجليزي (عبر kaikki.org) وArabic WordNet وPrinceton WordNet. الملف الأصلي محفوظ في `data/en-ar.zip` ومعه نصا LICENSE وATTRIBUTION، ويحوّله `scripts/build-ar.py` إلى ملفات JSON أصغر عند البناء (تعديل: اقتصر على الكلمات التي لها ترجمة عربية وعلى أول 4 أنواع نحوية و8 مرادفات). والبيانات الناتجة تبقى تحت رخصة CC BY-SA 4.0.
+
+للكلمات التي ليس لها ترجمة مباشرة في en-ar تُستنتَج ترجمتها من قاموس **ar-en** (الإصدار نفسه، `data/ar-en.zip`، CC BY-SA 4.0) بعكس اتجاهه، وتُوسَم في التطبيق «مستنتَجة – أقل دقة». وتُستبعد من الاستنتاج أي كلمة عربية فيها معنى موسوم بأنه بذيء أو مسيء (vulgar/offensive...).
