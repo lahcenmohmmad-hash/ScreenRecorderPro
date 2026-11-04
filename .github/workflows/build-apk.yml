@@ -21,6 +21,7 @@ jobs:
         run: |
           npm install
           node scripts/build-dict.js
+          python3 scripts/build-ar.py
           npx cap add android
       - name: App icon
         continue-on-error: true
