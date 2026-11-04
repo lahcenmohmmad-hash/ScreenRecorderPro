@@ -25,17 +25,9 @@ jobs:
           python3 scripts/build-sense.py
           npx cap add android
       - name: App icon
-        continue-on-error: true
         run: |
-          set -e
-          R=android/app/src/main/res
-          for p in mdpi:48 hdpi:72 xhdpi:96 xxhdpi:144 xxxhdpi:192; do
-            d=${p%%:*}; s=${p##*:}
-            for n in ic_launcher ic_launcher_round ic_launcher_foreground; do
-              convert assets/icon-512.png -resize ${s}x${s} $R/mipmap-$d/$n.png
-            done
-          done
-          rm -rf $R/mipmap-anydpi-v26
+          pip install pillow --quiet
+          python3 scripts/make-icons.py
       - name: Stable signing key
         env:
           KS: ${{ secrets.DEBUG_KEYSTORE_B64 }}
