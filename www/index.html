@@ -42,6 +42,7 @@ textarea,select{width:100%;padding:12px;border-radius:12px;border:1px solid var(
 .ic{background:none;border:0;font-size:20px;padding:4px 8px}
 .ti{width:100%;font-size:22px;text-align:center;letter-spacing:2px;padding:12px;border-radius:12px;border:2px solid var(--bd);background:var(--bg);color:var(--tx)}.btn:disabled{opacity:.4}small{opacity:.7}
 .arm{direction:rtl;text-align:center;font-size:20px;line-height:1.7;margin:10px 0}.arm .tag{font-size:12px}
+.ipa{direction:ltr;text-align:center;font-size:22px;color:var(--pr);min-height:30px;margin:2px 0}.sn{border-top:1px solid var(--bd);padding:8px 0;text-align:right}.sar{direction:rtl;font-size:18px;line-height:1.7}.sen{direction:ltr;text-align:left;font-size:13px}
 </style>
 </head>
 <body>
@@ -77,6 +78,11 @@ const AC={},AI={},POSAR={'n.':'اسم','v.':'فعل','adj.':'صفة','adv.':'ح�
 async function ld(C,l,suf){const k=l+suf;if(C[k])return C[k];try{C[k]=await(await fetch('dict/ar/'+k+'.json')).json()}catch(e){C[k]={}}return C[k]}
 async function lookupAr(w){for(const x of [w,...stems(w)]){const d=(await ld(AC,x[0],''))[x];if(Array.isArray(d))return d;const h=(await ld(AI,x[0],'_i'))[x];if(typeof h==='string'){const d2=(await ld(AC,h[0],''))[h];if(Array.isArray(d2))return d2}}return null}
 function showAr(sel,r){const e=$(sel);if(!e)return;e.innerHTML=r?r.map(x=>`<div>${x[0]?`<span class="tag">${POSAR[x[0]]||x[0]}</span> `:''}<b>${x[1]}</b></div>`).join(''):'<span class="mu" style="font-size:14px">لا توجد ترجمة عربية لهذه الكلمة في القاموس المدمج</span>'}
+const SH={},POS2={n:'اسم',v:'فعل',a:'صفة',r:'حال'};
+async function lds(d,l){const k=d+l;if(SH[k])return SH[k];try{SH[k]=await(await fetch('dict/'+d+'/'+l+'.json')).json()}catch(e){SH[k]={}}return SH[k]}
+async function lookupS(w){for(const x of [w,...stems(w)]){let d=(await lds('s',x[0]))[x];if(Array.isArray(d))return d;const h=(await ld(AI,x[0],'_i'))[x];if(typeof h==='string'){d=(await lds('s',h[0]))[h];if(Array.isArray(d))return d}}return null}
+async function lookupP(w){const d=(await lds('p',w[0]))[w];return typeof d==='string'?d.split('|'):null}
+function showS(r){const e=$('#df');if(!e)return;e.innerHTML='<div class="mu" style="font-size:12px;text-align:center">الشرح بالعربية (ترجمة آلية قد تحتوي أخطاء)</div>'+r.map(x=>`<div class="sn"><span class="tag">${POS2[x[0]]||x[0]}</span><div class="sar">${x[2]}</div><div class="sen mu">${x[1]}${x[3]?` — <i>“${x[3]}”</i>`:''}</div></div>`).join('')}
 async function lookup(w){for(const x of [w,...stems(w)]){const e=(await shard(x[0]))[x];if(Array.isArray(e))return e}return null}
 /* ---------- جدولة FSRS-4.5 مبسّطة ---------- */
 const FW=[.4872,1.4003,3.7145,13.8206,5.1618,1.2298,.8975,.031,1.6474,.1367,1.0461,2.1072,.0793,.3246,1.587,.2272,2.8755],FC=19/81,cl=(x,a,b)=>Math.min(b,Math.max(a,x));
@@ -134,11 +140,11 @@ function vEnd(){M(`<div class="card fb"><h2>🏁 انتهت الجلسة</h2><p>
 function vL(){const l=S.words.filter(w=>w.m==='l');
 if(!l.length)return M(`<div class="card" style="text-align:center">لا توجد كلمات للحفظ.<br><br><button class="btn" data-a="goW">أضف كلمات</button></div>`);
 if(!l.find(w=>w.id===lc))lc=shuf(l)[0].id;const w=l.find(x=>x.id===lc);
-M(`<div class="card" style="text-align:center"><span class="tag">${w.k||0}/3 ✓</span>${w.lc?' <span class="tag">🧩 عنيدة</span>':''}<div class="big" style="margin:18px 0 6px">${w.w}</div><div class="mu ltr" style="text-align:center">${pt(w.w)}</div><div id="arm" class="arm"></div><div id="df" class="mu ltr" style="min-height:44px;margin-top:8px"></div>
+M(`<div class="card" style="text-align:center"><span class="tag">${w.k||0}/3 ✓</span>${w.lc?' <span class="tag">🧩 عنيدة</span>':''}<div class="big" style="margin:18px 0 6px">${w.w}</div><div id="ipa" class="ipa"></div><div class="mu ltr" style="text-align:center">${pt(w.w)}</div><div id="arm" class="arm"></div><div id="df" class="mu ltr" style="min-height:44px;margin-top:8px"></div>
 <div class="row"><button class="btn g" data-a="lsay">🔊 استمع</button><button class="btn g" data-a="lslow">🐢 ببطء</button><button class="btn g" data-a="lsp">🔤 تهجئة</button></div><br>
 <div class="row"><button class="btn ok" data-a="lok">حفظتها ✓</button><button class="btn g" data-a="lnx">التالي ›</button></div><br>
 <button class="btn g" style="width:100%" data-a="l2d">انقلها إلى الإملاء الآن 🎯</button></div>`);
-say(w.w);lookupAr(w.w).then(r=>showAr('#arm',r));lookup(w.w).then(r=>{const e=$('#df');if(e)e.innerHTML=r?r.map(x=>`<div><b>${x[0]}.</b> ${x[1]}${x[2]?` — <i>“${x[2]}”</i>`:''}</div>`).join(''):'<span>لا يوجد تعريف لهذه الكلمة في القاموس المدمج</span>'})}
+say(w.w);lookupAr(w.w).then(r=>showAr('#arm',r));lookupP(w.w).then(r=>{const e=$('#ipa');if(e&&r)e.textContent=r.map(x=>'/'+x+'/').join('   ')});lookupS(w.w).then(r=>{if(r)return showS(r);lookup(w.w).then(r=>{const e=$('#df');if(e)e.innerHTML=r?r.map(x=>`<div><b>${x[0]}.</b> ${x[1]}${x[2]?` — <i>“${x[2]}”</i>`:''}</div>`).join(''):'<span>لا يوجد تعريف لهذه الكلمة في القاموس المدمج</span>'})})}
 /* ---------- الكلمات والإحصائيات ---------- */
 function vW(){M(`<div class="card"><textarea id="nw" rows="4" class="ltr" placeholder="الصق الكلمات: كلمة في كل سطر أو مفصولة بفواصل"></textarea>
 <div class="row" style="margin-top:10px"><select id="nm"><option value="d">إملاء</option><option value="l">حفظ</option></select><button class="btn" data-a="add">إضافة</button></div></div>
@@ -149,7 +155,7 @@ M(`<div class="card"><div class="row" style="text-align:center"><div><div class=
 <div class="card"><b>🔍 أنماط أخطائك</b>${top.length?top.map(([k,v])=>`<div>${EN[k]||k} — ${v}</div>`).join(''):'<div class="mu">لا أخطاء بعد 👌</div>'}</div>
 <div class="card"><b>🧠 نسبة التذكّر المستهدفة:</b> <span id="rv">${Math.round(S.ret*100)}%</span><br><input type="range" id="rr" min="80" max="95" value="${Math.round(S.ret*100)}" style="width:100%"><div class="mu">أعلى = مراجعات أكثر وحفظ أقوى. المعتمد 90%.</div></div>
 <div class="card"><b>الصوت:</b> ${voice?'✅ '+voice.name+(voice.localService?' (محلي – بدون إنترنت)':' ⚠️ قد يحتاج إنترنت'):'⚠️ لا يوجد صوت إنجليزي في محرك النطق – ثبّته من إعدادات الهاتف ← إخراج تحويل النص إلى كلام'}<br><br>السرعة <input type="range" id="rt" min=".4" max="1.1" step=".05" value="${S.rate}"> <button class="btn g" data-a="test">جرّب</button> <button class="btn g" data-a="diag">فحص</button><div id="dg" class="mu ltr" style="margin-top:8px;font-size:13px"></div></div>
-<div class="card row"><button class="btn g" data-a="exp">تصدير</button><button class="btn g" data-a="imp">استيراد</button><button class="btn g" data-a="rst" style="color:var(--bad)">مسح الكل</button></div><div class="mu" style="font-size:11px;text-align:center">المعاني الإنجليزية: Princeton WordNet 3.1 · المعاني العربية: koreader-dicts (en-ar وar-en) المبني على ويكاموس وArabic WordNet وPrinceton WordNet — CC BY-SA 4.0</div>`)}
+<div class="card row"><button class="btn g" data-a="exp">تصدير</button><button class="btn g" data-a="imp">استيراد</button><button class="btn g" data-a="rst" style="color:var(--bad)">مسح الكل</button></div><div class="mu" style="font-size:11px;text-align:center">المعاني الإنجليزية: Princeton WordNet 3.1 · المعاني العربية: koreader-dicts (en-ar وar-en) المبني على ويكاموس وArabic WordNet وPrinceton WordNet — CC BY-SA 4.0 · الشرح: Open English WordNet 2024 وArabic WordNet 4.1 (CC BY 4.0) · IPA: ipa-dict (MIT)</div>`)}
 /* ---------- الأحداث ---------- */
 document.addEventListener('click',e=>{
 const nb=e.target.closest('nav button');if(nb){tab=nb.dataset.t;return render()}
