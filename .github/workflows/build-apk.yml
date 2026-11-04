@@ -34,6 +34,12 @@ jobs:
             done
           done
           rm -rf $R/mipmap-anydpi-v26
+      - name: Stable signing key
+        env:
+          KS: ${{ secrets.DEBUG_KEYSTORE_B64 }}
+        run: |
+          mkdir -p ~/.android
+          echo "$KS" | base64 -d > ~/.android/debug.keystore
       - name: Build debug APK
         run: |
           cd android
