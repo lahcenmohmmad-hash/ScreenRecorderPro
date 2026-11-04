@@ -61,10 +61,12 @@ const save=()=>{try{localStorage.setItem('sm1',JSON.stringify(S))}catch(e){}};
 const shuf=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
 let tab='p',ses=null,cur=null,lc=null,voice=null;
 /* ---------- الصوت ---------- */
-const NT=()=>{const C=window.Capacitor;if(!(C&&C.nativePromise&&C.isNativePlatform&&C.isNativePlatform()))return null;return NT.p||(NT.p={speak:o=>C.nativePromise('TextToSpeech','speak',o),isLanguageSupported:o=>C.nativePromise('TextToSpeech','isLanguageSupported',o)})};let nok=null;
-function pickVoice(){if(NT())return nok===false?null:{name:'صوت الهاتف',localService:true};try{const v=speechSynthesis.getVoices().filter(x=>/^en/i.test(x.lang));voice=v.find(x=>x.localService&&/en[-_]US/i.test(x.lang))||v.find(x=>x.localService)||v[0]||null}catch(e){}return voice}
+const NT=()=>{const C=window.Capacitor;if(!(C&&C.nativePromise&&C.isNativePlatform&&C.isNativePlatform()))return null;return NT.p||(NT.p={speak:o=>C.nativePromise('TextToSpeech','speak',o),isLanguageSupported:o=>C.nativePromise('TextToSpeech','isLanguageSupported',o),getSupportedLanguages:()=>C.nativePromise('TextToSpeech','getSupportedLanguages',{})})};let nok=null,LANGX='en-US';
+const errm=e=>String((e&&(e.message||e.errorMessage))||e||''),VD=[1500,2000,3000,4000],LC=['en-US','en-GB','en'];
+async function chkVoice(){const T=NT();if(!T)return;for(const d of VD){await new Promise(r=>setTimeout(r,d));if(nok===true)return;for(const l of LC){let ok=false;try{ok=(await T.isLanguageSupported({lang:l})).supported}catch(e){}if(ok){LANGX=l;nok=true;if(!cur)render();return}}}nok=false;if(!cur)render()}
+function pickVoice(){if(NT())return nok===false?null:{name:nok?'صوت الهاتف ('+LANGX+')':'جارٍ فحص صوت الهاتف…',localService:true};try{const v=speechSynthesis.getVoices().filter(x=>/^en/i.test(x.lang));voice=v.find(x=>x.localService&&/en[-_]US/i.test(x.lang))||v.find(x=>x.localService)||v[0]||null}catch(e){}return voice}
 try{speechSynthesis.onvoiceschanged=pickVoice}catch(e){}
-function say(t,r){const T=NT();if(T){T.speak({text:t,lang:'en-US',rate:r||S.rate||.85,pitch:1,volume:1,category:'playback'}).catch(()=>toast('تعذّر النطق – ثبّت الصوت الإنجليزي'));return}try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang=voice?voice.lang:'en-US';if(voice)u.voice=voice;u.rate=r||S.rate||.85;speechSynthesis.speak(u)}catch(e){}}
+function say(t,r){const T=NT();if(T){T.speak({text:t,lang:LANGX,rate:r||S.rate||.85,pitch:1,volume:1}).then(()=>{if(nok!==true){nok=true;if(!cur)render()}}).catch(e=>{const m=errm(e);if(/not supported/i.test(m)){nok=false;if(!cur)render();toast('الصوت الإنجليزي غير متوفر في محرك النطق')}else if(/initializ/i.test(m))toast('محرك النطق يجهّز نفسه… أعد المحاولة بعد لحظة');else toast('تعذّر النطق: '+m.slice(0,80))});return}try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang=voice?voice.lang:'en-US';if(voice)u.voice=voice;u.rate=r||S.rate||.85;speechSynthesis.speak(u)}catch(e){}}
 const spell=w=>say(w+'. '+[...w].map(c=>c.toUpperCase()).join(', '),.7);
 function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.append(d);setTimeout(()=>d.remove(),2200)}
 const DC={};let EX={};
@@ -141,7 +143,7 @@ M(`<div class="card"><div class="row" style="text-align:center"><div><div class=
 <div class="card">الكلمات: ${S.words.length} (حفظ ${S.words.length-d.length} · إملاء ${d.length}) · مستحقة اليوم: ${d.filter(w=>w.due<=n).length}</div>
 <div class="card"><b>🔍 أنماط أخطائك</b>${top.length?top.map(([k,v])=>`<div>${EN[k]||k} — ${v}</div>`).join(''):'<div class="mu">لا أخطاء بعد 👌</div>'}</div>
 <div class="card"><b>🧠 نسبة التذكّر المستهدفة:</b> <span id="rv">${Math.round(S.ret*100)}%</span><br><input type="range" id="rr" min="80" max="95" value="${Math.round(S.ret*100)}" style="width:100%"><div class="mu">أعلى = مراجعات أكثر وحفظ أقوى. المعتمد 90%.</div></div>
-<div class="card"><b>الصوت:</b> ${voice?'✅ '+voice.name+(voice.localService?' (محلي – بدون إنترنت)':' ⚠️ قد يحتاج إنترنت'):'⚠️ لا يوجد صوت إنجليزي في محرك النطق – ثبّته من إعدادات الهاتف ← إخراج تحويل النص إلى كلام'}<br><br>السرعة <input type="range" id="rt" min=".4" max="1.1" step=".05" value="${S.rate}"> <button class="btn g" data-a="test">جرّب</button></div>
+<div class="card"><b>الصوت:</b> ${voice?'✅ '+voice.name+(voice.localService?' (محلي – بدون إنترنت)':' ⚠️ قد يحتاج إنترنت'):'⚠️ لا يوجد صوت إنجليزي في محرك النطق – ثبّته من إعدادات الهاتف ← إخراج تحويل النص إلى كلام'}<br><br>السرعة <input type="range" id="rt" min=".4" max="1.1" step=".05" value="${S.rate}"> <button class="btn g" data-a="test">جرّب</button> <button class="btn g" data-a="diag">فحص</button><div id="dg" class="mu ltr" style="margin-top:8px;font-size:13px"></div></div>
 <div class="card row"><button class="btn g" data-a="exp">تصدير</button><button class="btn g" data-a="imp">استيراد</button><button class="btn g" data-a="rst" style="color:var(--bad)">مسح الكل</button></div><div class="mu" style="font-size:11px;text-align:center">القاموس المدمج: Princeton WordNet 3.1</div>`)}
 /* ---------- الأحداث ---------- */
 document.addEventListener('click',e=>{
@@ -176,6 +178,7 @@ case'wdel':S.words=S.words.filter(x=>x.id!==id);save();vW();break;
 case'test':say('Hello, this is a test');break;
 case'exp':{const j=JSON.stringify(S);if(NT()){navigator.clipboard.writeText(j).then(()=>toast('تم نسخ النسخة الاحتياطية – الصقها في ملاحظات'),()=>toast('تعذّر النسخ'));break}const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([j],{type:'application/json'}));a.download='spellmaster-backup.json';a.click();break}
 case'imp':if(NT()){const t=prompt('الصق النسخة الاحتياطية هنا');if(t)impT(t)}else $('#fi').click();break;
+case'diag':{const T=NT();if(!T){toast('الفحص متاح داخل التطبيق فقط');break}T.getSupportedLanguages().then(r=>{const l=r.languages||[];$('#dg').textContent='اللغات الإنجليزية المتاحة: '+(l.filter(x=>/^en/i.test(x)).join(', ')||'لا توجد')+' — من أصل '+l.length}).catch(e=>{$('#dg').textContent='خطأ: '+errm(e)});break}
 case'rst':if(confirm('مسح كل الكلمات والتقدّم؟')){S={words:[],streak:0,last:0,log:{},rate:.85,ret:.9,err:{}};save();render()}break}});
 document.addEventListener('input',e=>{const t=e.target,i=t.id;
 if(i==='rt'){S.rate=+t.value;save()}
@@ -186,7 +189,7 @@ document.addEventListener('keydown',e=>{if(e.key!=='Enter')return;if(e.target.id
 function impT(t){try{const j=JSON.parse(t);if(!Array.isArray(j.words))throw 0;S=Object.assign(S,j);S.err=S.err||{};save();toast('تم الاستيراد');render()}catch(x){toast('نسخة غير صالحة')}}
 $('#fi').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>impT(r.result);r.readAsText(f)});
 pickVoice();render();
-if(NT())NT().isLanguageSupported({lang:'en-US'}).then(r=>{nok=r.supported;render()}).catch(()=>{});
+chkVoice();
 </script>
 </body>
 </html>
