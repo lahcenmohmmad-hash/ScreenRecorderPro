@@ -61,7 +61,7 @@ try{Object.assign(S,JSON.parse(localStorage.getItem('sm1')||'{}'))}catch(e){}
 S.err=S.err||{};S.ret=S.ret||.9;
 const save=()=>{try{localStorage.setItem('sm1',JSON.stringify(S))}catch(e){}};
 const shuf=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
-let tab='p',ses=null,cur=null,lc=null,voice=null;
+let tab='p',ses=null,cur=null,lc=null,voice=null,lh=[];
 /* ---------- الصوت ---------- */
 const NT=()=>{const C=window.Capacitor;if(!(C&&C.nativePromise&&C.isNativePlatform&&C.isNativePlatform()))return null;return NT.p||(NT.p={speak:o=>C.nativePromise('TextToSpeech','speak',o),isLanguageSupported:o=>C.nativePromise('TextToSpeech','isLanguageSupported',o),getSupportedLanguages:()=>C.nativePromise('TextToSpeech','getSupportedLanguages',{})})};let nok=null,LANGX='en-US';
 const errm=e=>String((e&&(e.message||e.errorMessage))||e||''),VD=[1500,2000,3000,4000],LC=['en-US','en-GB','en'];
@@ -74,15 +74,16 @@ function toast(t){const d=document.createElement('div');d.className='toast';d.te
 const DC={};let EX={};
 const stems=w=>{const r=[],e=(x,y='')=>{if(w.endsWith(x)&&w.length>x.length+1)r.push(w.slice(0,-x.length)+y)};e('ies','y');e('ied','y');e('ily','y');e('es');e('s');e('ed');e('ed','e');e('ing');e('ing','e');e('er');e('er','e');e('est');e('est','e');e('ly');const m=w.match(/^(.*?)(.)\2(ed|ing|er|est)$/);if(m)r.push(m[1]+m[2]);return r};
 async function shard(l){if(DC[l])return DC[l];try{DC[l]=await(await fetch('dict/'+l+'.json')).json()}catch(e){DC[l]={}}return DC[l]}
-const AC={},AI={},POSAR={'n.':'اسم','v.':'فعل','adj.':'صفة','adv.':'حال','prep.':'حرف جر','conj.':'حرف عطف','pron.':'ضمير','interj.':'تعجب','det.':'محدِّد','num.':'عدد','phr.':'عبارة','prop. n.':'علم','≈':'مستنتَجة – أقل دقة'};
+const AC={},AI={},POSAR={'n.':'اسم','v.':'فعل','adj.':'صفة','adv.':'حال','prep.':'حرف جر','conj.':'حرف عطف','pron.':'ضمير','interj.':'تعجب','det.':'محدِّد','num.':'عدد','phr.':'عبارة','prop. n.':'علم','≈':'مستنتَجة – أقل دقة','awn':'مرادفات عربية'};
 async function ld(C,l,suf){const k=l+suf;if(C[k])return C[k];try{C[k]=await(await fetch('dict/ar/'+k+'.json')).json()}catch(e){C[k]={}}return C[k]}
 async function lookupAr(w){for(const x of [w,...stems(w)]){const d=(await ld(AC,x[0],''))[x];if(Array.isArray(d))return d;const h=(await ld(AI,x[0],'_i'))[x];if(typeof h==='string'){const d2=(await ld(AC,h[0],''))[h];if(Array.isArray(d2))return d2}}return null}
+async function arFill(sel,w){let r=await lookupAr(w);if(!r){const s=await lookupS(w);const l=s?[...new Set(s.slice(0,2).flatMap(x=>x[4]||[]))].slice(0,6):[];if(l.length)r=[['awn',l.join('، ')]]}showAr(sel,r)}
 function showAr(sel,r){const e=$(sel);if(!e)return;e.innerHTML=r?r.map(x=>`<div>${x[0]?`<span class="tag">${POSAR[x[0]]||x[0]}</span> `:''}<b>${x[1]}</b></div>`).join(''):'<span class="mu" style="font-size:14px">لا توجد ترجمة عربية لهذه الكلمة في القاموس المدمج</span>'}
 const SH={},POS2={n:'اسم',v:'فعل',a:'صفة',r:'حال'};
 async function lds(d,l){const k=d+l;if(SH[k])return SH[k];try{SH[k]=await(await fetch('dict/'+d+'/'+l+'.json')).json()}catch(e){SH[k]={}}return SH[k]}
 async function lookupS(w){for(const x of [w,...stems(w)]){let d=(await lds('s',x[0]))[x];if(Array.isArray(d))return d;const h=(await ld(AI,x[0],'_i'))[x];if(typeof h==='string'){d=(await lds('s',h[0]))[h];if(Array.isArray(d))return d}}return null}
-async function lookupP(w){const d=(await lds('p',w[0]))[w];return typeof d==='string'?d.split('|'):null}
-function showS(r){const e=$('#df');if(!e)return;e.innerHTML='<div class="mu" style="font-size:12px;text-align:center">الشرح بالعربية (ترجمة آلية قد تحتوي أخطاء)</div>'+r.map(x=>`<div class="sn"><span class="tag">${POS2[x[0]]||x[0]}</span><div class="sar">${x[2]}</div><div class="sen mu">${x[1]}${x[3]?` — <i>“${x[3]}”</i>`:''}</div></div>`).join('')}
+async function lookupP(w){const d=(await lds('p',w[0]))[w];return typeof d==='string'?{a:d[0]==='≈',v:d.replace('≈','').split('|')}:null}
+function showS(r){const e=$('#df');if(!e)return;e.innerHTML='<div class="mu" style="font-size:12px;text-align:center">الشرح بالعربية (ترجمة آلية قد تحتوي أخطاء)</div>'+r.map(x=>`<div class="sn"><span class="tag">${POS2[x[0]]||x[0]}</span>${x[4]&&x[4].length?`<div class="sar"><b>${x[4].join('، ')}</b></div>`:''}<div class="sar">${x[2]}</div><div class="sen mu">${x[1]}${x[3]?` — <i>“${x[3]}”</i>`:''}</div></div>`).join('')}
 async function lookup(w){for(const x of [w,...stems(w)]){const e=(await shard(x[0]))[x];if(Array.isArray(e))return e}return null}
 /* ---------- جدولة FSRS-4.5 مبسّطة ---------- */
 const FW=[.4872,1.4003,3.7145,13.8206,5.1618,1.2298,.8975,.031,1.6474,.1367,1.0461,2.1072,.0793,.3246,1.587,.2272,2.8755],FC=19/81,cl=(x,a,b)=>Math.min(b,Math.max(a,x));
@@ -134,7 +135,7 @@ const inp=c.lv===0?`<div class="tiles">${c.tiles.map((t,i)=>`<button class="tile
 M(`<div class="bar"><i style="width:${ses.i/ses.q.length*100}%"></i></div><div class="card" style="margin-top:14px;text-align:center"><span class="tag">${LV[c.lv]}</span>
 <div class="row" style="margin-top:10px"><button class="btn g" data-a="say">🔊 استمع</button><button class="btn g" data-a="slow">🐢 ببطء</button>${c.lv&&!c.res?'<button class="btn g" data-a="hint">💡 تلميح</button>':''}</div>
 ${body}${c.res?fb(c):inp+`<div class="row" style="margin-top:10px">${c.lv===0?'<button class="btn g" data-a="clr">مسح</button>':''}<button class="btn" data-a="chk">تحقق ✓</button></div>`}</div>`);
-if(c.res)lookupAr(w).then(r=>showAr('#arf',r));if(c.lv&&!c.res)setTimeout(()=>{const t=$('#ti');t&&t.focus()},60);if(c.res&&!c.ok)setTimeout(()=>{const t=$('#cp');t&&t.focus()},60)}
+if(c.res)arFill('#arf',w);if(c.lv&&!c.res)setTimeout(()=>{const t=$('#ti');t&&t.focus()},60);if(c.res&&!c.ok)setTimeout(()=>{const t=$('#cp');t&&t.focus()},60)}
 function vEnd(){M(`<div class="card fb"><h2>🏁 انتهت الجلسة</h2><p>✅ ${ses.ok} صحيحة · ❌ ${ses.bad} خاطئة</p><p class="mu">الأخطاء ستعود إليك غداً تلقائياً.</p><button class="btn" style="width:100%" data-a="back">رجوع</button></div>`)}
 /* ---------- الحفظ ---------- */
 function vL(){const l=S.words.filter(w=>w.m==='l');
@@ -142,9 +143,9 @@ if(!l.length)return M(`<div class="card" style="text-align:center">لا توجد
 if(!l.find(w=>w.id===lc))lc=shuf(l)[0].id;const w=l.find(x=>x.id===lc);
 M(`<div class="card" style="text-align:center"><span class="tag">${w.k||0}/3 ✓</span>${w.lc?' <span class="tag">🧩 عنيدة</span>':''}<div class="big" style="margin:18px 0 6px">${w.w}</div><div id="ipa" class="ipa"></div><div class="mu ltr" style="text-align:center">${pt(w.w)}</div><div id="arm" class="arm"></div><div id="df" class="mu ltr" style="min-height:44px;margin-top:8px"></div>
 <div class="row"><button class="btn g" data-a="lsay">🔊 استمع</button><button class="btn g" data-a="lslow">🐢 ببطء</button><button class="btn g" data-a="lsp">🔤 تهجئة</button></div><br>
-<div class="row"><button class="btn ok" data-a="lok">حفظتها ✓</button><button class="btn g" data-a="lnx">التالي ›</button></div><br>
+<div class="row"><button class="btn g" data-a="lprev">السابق</button><button class="btn ok" data-a="lok">حفظتها ✓</button><button class="btn g" data-a="lnx">التالي</button></div><br>
 <button class="btn g" style="width:100%" data-a="l2d">انقلها إلى الإملاء الآن 🎯</button></div>`);
-say(w.w);lookupAr(w.w).then(r=>showAr('#arm',r));lookupP(w.w).then(r=>{const e=$('#ipa');if(e&&r)e.textContent=r.map(x=>'/'+x+'/').join('   ')});lookupS(w.w).then(r=>{if(r)return showS(r);lookup(w.w).then(r=>{const e=$('#df');if(e)e.innerHTML=r?r.map(x=>`<div><b>${x[0]}.</b> ${x[1]}${x[2]?` — <i>“${x[2]}”</i>`:''}</div>`).join(''):'<span>لا يوجد تعريف لهذه الكلمة في القاموس المدمج</span>'})})}
+say(w.w);arFill('#arm',w.w);lookupP(w.w).then(r=>{const e=$('#ipa');if(!e)return;e.innerHTML=r?r.v.map(x=>'/'+x+'/').join('   ')+(r.a?' <small class="mu" style="font-size:11px">≈ نطق تقريبي مولَّد آلياً</small>':''):'<small class="mu" style="font-size:12px">لا يوجد IPA لهذه الكلمة</small>'});lookupS(w.w).then(r=>{if(r)return showS(r);lookup(w.w).then(r=>{const e=$('#df');if(e)e.innerHTML=r?r.map(x=>`<div><b>${x[0]}.</b> ${x[1]}${x[2]?` — <i>“${x[2]}”</i>`:''}</div>`).join(''):'<span>لا يوجد تعريف لهذه الكلمة في القاموس المدمج</span>'})})}
 /* ---------- الكلمات والإحصائيات ---------- */
 function vW(){M(`<div class="card"><textarea id="nw" rows="4" class="ltr" placeholder="الصق الكلمات: كلمة في كل سطر أو مفصولة بفواصل"></textarea>
 <div class="row" style="margin-top:10px"><select id="nm"><option value="d">إملاء</option><option value="l">حفظ</option></select><button class="btn" data-a="add">إضافة</button></div></div>
@@ -159,7 +160,7 @@ M(`<div class="card"><div class="row" style="text-align:center"><div><div class=
 /* ---------- الأحداث ---------- */
 document.addEventListener('click',e=>{
 const nb=e.target.closest('nav button');if(nb){tab=nb.dataset.t;return render()}
-const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,id=b.dataset.id,W=()=>S.words.find(x=>x.id===id),LW=()=>S.words.find(x=>x.id===lc),next=()=>{const l=S.words.filter(w=>w.m==='l'&&w.id!==lc);lc=l.length?shuf(l)[0].id:lc;render()};
+const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,id=b.dataset.id,W=()=>S.words.find(x=>x.id===id),LW=()=>S.words.find(x=>x.id===lc),next=()=>{const l=S.words.filter(w=>w.m==='l'&&w.id!==lc);if(l.length){if(lc){lh.push(lc);if(lh.length>100)lh.shift()}lc=shuf(l)[0].id}render()};
 switch(a){
 case'start':startSession(false);break;case'force':startSession(true);break;case'goW':tab='w';render();break;
 case'back':ses=null;cur=null;render();break;
@@ -179,6 +180,7 @@ case'nx':ses.i++;nextQ();break;
 case'lsay':say(LW().w);break;case'lslow':say(LW().w,.5);break;case'lsp':spell(LW().w);break;
 case'lok':{const w=LW();w.k=(w.k||0)+1;if(w.k>=3){mv(w,'d');w.lc=0;toast('🎯 انتقلت إلى الإملاء')}else save();next();break}
 case'lnx':next();break;
+case'lprev':{let ok=false;while(lh.length){const id2=lh.pop();if(S.words.some(x=>x.id===id2&&x.m==='l')){lc=id2;ok=true;break}}if(ok)render();else toast('هذه أول بطاقة');break}
 case'l2d':mv(LW(),'d');toast('🎯 انتقلت إلى الإملاء');next();break;
 case'add':{const m=$('#nm').value,have=new Set(S.words.map(w=>w.w));
 const ws=[...new Set($('#nw').value.split(/[\n,;،]+/).map(x=>x.trim().toLowerCase().replace(/[^a-z]/g,'')).filter(x=>x.length>1&&!have.has(x)))];
