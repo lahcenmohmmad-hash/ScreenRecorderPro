@@ -71,7 +71,7 @@ function pickVoice(){if(NT())return nok===false?null:{name:nok?'صوت الها�
 try{speechSynthesis.onvoiceschanged=pickVoice}catch(e){}
 function say(t,r){const T=NT();if(T){T.speak({text:t,lang:LANGX,rate:r||S.rate||.85,pitch:1,volume:1}).then(()=>{if(nok!==true){nok=true;if(!cur)render()}}).catch(e=>{const m=errm(e);if(/not supported/i.test(m)){nok=false;if(!cur)render();toast('الصوت الإنجليزي غير متوفر في محرك النطق')}else if(/initializ/i.test(m))toast('محرك النطق يجهّز نفسه… أعد المحاولة بعد لحظة');else toast('تعذّر النطق: '+m.slice(0,80))});return}try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang=voice?voice.lang:'en-US';if(voice)u.voice=voice;u.rate=r||S.rate||.85;speechSynthesis.speak(u)}catch(e){}}
 const spell=w=>say(w+'. '+[...w].map(c=>c.toUpperCase()).join(', '),.7);
-function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.append(d);setTimeout(()=>d.remove(),2200)}
+function toast(t,u){const d=document.createElement('div');d.className='toast';d.textContent=t;if(u){const b=document.createElement('button');b.textContent='تراجع';b.style.cssText='margin-inline-start:12px;background:none;border:1px solid #fff;color:#fff;border-radius:10px;padding:2px 10px;font:inherit';b.onclick=()=>{u();d.remove()};d.append(b)}document.body.append(d);setTimeout(()=>d.remove(),u?8000:2200)}
 const DC={};let EX={};
 const stems=w=>{const r=[],e=(x,y='')=>{if(w.endsWith(x)&&w.length>x.length+1)r.push(w.slice(0,-x.length)+y)};e('ies','y');e('ied','y');e('ily','y');e('es');e('s');e('ed');e('ed','e');e('ing');e('ing','e');e('er');e('er','e');e('est');e('est','e');e('ly');const m=w.match(/^(.*?)(.)\2(ed|ing|er|est)$/);if(m)r.push(m[1]+m[2]);return r};
 async function shard(l){if(DC[l])return DC[l];try{DC[l]=await(await fetch('dict/'+l+'.json')).json()}catch(e){DC[l]={}}return DC[l]}
@@ -117,7 +117,7 @@ function grade(w,g){const n=dn(),ok=g>1;w.t=(w.t||0)+1;
 if(ok){w.ok=(w.ok||0)+1;w.b=(w.b||0)+1}else{w.bad=(w.bad||0)+1;w.b=0}
 if(w.lr!==n)fs(w,g,n);else if(!ok)w.due=n+1;
 S.log[n]=(S.log[n]||0)+1;if(S.last!==n){S.streak=S.last===n-1?S.streak+1:1;S.last=n}
-let lee=false;if(!ok&&w.bad>=4&&(w.ok||0)<w.bad*2){mv(w,'l');w.lc=1;w.bad=0;w.ok=0;w.s=null;lee=true}
+let lee=false;if(!ok&&w.bad>=4&&(w.ok||0)<w.bad*2){w.lc=1;w.bad=0;w.ok=0;lee=true}
 save();return lee}
 /* ---------- أجزاء الكلمة وأنماط الخطأ ---------- */
 const PF=['un','dis','mis','pre','non','over','under','sub','inter','anti','fore','out','semi','trans','super','re'],SF=['ness','ment','tion','sion','able','ible','less','ful','ing','ous','ive','ity','ize','ise','ly','ed'];
@@ -146,7 +146,7 @@ render();setTimeout(()=>say(w.w),250)}
 const chars=c=>c.lv===0?c.slots.map(i=>i<0?'':c.tiles[i].c):[...c.w.w].map((x,k)=>k?(c.val[k-1]||''):x),
 guessOf=c=>c.lv===0?chars(c).join(''):c.lv===1?c.w.w[0]+(c.val||''):(c.val||''),
 sh=(ch,res)=>ch.map((c,k)=>`<div class="slot ${c?'f':''} ${res?res[k]:''}" ${!res&&cur.lv===0?`data-a="rm" data-k="${k}"`:''}>${c}</div>`).join('');
-const fb=c=>`<div class="fb">${c.ok?`<h2 style="color:var(--ok)">✅ ${c.pr}</h2><p class="mu">مراجعتها القادمة بعد ${Math.max(1,c.w.due-dn())} يوم</p>`:`<h2 style="color:var(--bad)">❌ الصحيح:</h2><div class="big">${c.w.w}</div><div class="mu ltr" style="text-align:center">${pt(c.w.w)}</div><p class="mu">كتبت: <span class="ltr">${c.guess}</span></p>${c.leech?'<p>🧩 كلمة عنيدة: نقلتها إلى «الحفظ» لتحفظها ثم تعود للإملاء.</p>':''}<p>✍️ اكتب الكلمة الصحيحة مرة واحدة للمتابعة</p><input id="cp" class="ti" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false" dir="ltr">`}<div id="arf" class="arm"></div><div class="row" style="margin-top:10px"><button class="btn g" data-a="sp">🔤 تهجئة</button><button class="btn" id="nxb" data-a="nx" ${c.ok?'':'disabled'}>التالي ›</button></div></div>`;
+const fb=c=>`<div class="fb">${c.ok?`<h2 style="color:var(--ok)">✅ ${c.pr}</h2><p class="mu">مراجعتها القادمة بعد ${Math.max(1,c.w.due-dn())} يوم</p>`:`<h2 style="color:var(--bad)">❌ الصحيح:</h2><div class="big">${c.w.w}</div><div class="mu ltr" style="text-align:center">${pt(c.w.w)}</div><p class="mu">كتبت: <span class="ltr">${c.guess}</span></p>${c.leech?'<p>🧩 كلمة عنيدة (أخطأت فيها 4 مرات). هل تنقلها إلى الحفظ لتحفظها ثم تعود؟ <button class="btn g" data-a="lee2l">انقلها إلى الحفظ</button></p>':''}<p>✍️ اكتب الكلمة الصحيحة مرة واحدة للمتابعة</p><input id="cp" class="ti" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false" dir="ltr">`}<div id="arf" class="arm"></div><div class="row" style="margin-top:10px"><button class="btn g" data-a="sp">🔤 تهجئة</button><button class="btn" id="nxb" data-a="nx" ${c.ok?'':'disabled'}>التالي ›</button></div></div>`;
 function vQ(){const c=cur,w=c.w.w;
 const body=c.res?`<div class="slots">${sh(c.gch,c.res)}</div>`:c.lv===2?'':`<div class="slots" id="sl">${sh(chars(c),null)}</div>`;
 const inp=c.lv===0?`<div class="tiles">${c.tiles.map((t,i)=>`<button class="tile" data-a="pk" data-i="${i}" ${c.slots.includes(i)?'disabled':''}>${t.c}</button>`).join('')}</div>`:`<input id="ti" class="ti" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false" dir="ltr" placeholder="${c.lv===1?'أكمل الحروف الباقية':'اكتب الكلمة'}" value="${c.val||''}"><div id="hn" class="mu ltr" style="min-height:24px;margin-top:6px">${c.hint?'تلميح: '+w.slice(0,(c.lv===1?1:0)+c.hint)+'…':''}</div>`;
@@ -157,11 +157,11 @@ if(c.res)arFill('#arf',w);if(c.lv&&!c.res)setTimeout(()=>{const t=$('#ti');t&&t.
 function vEnd(){M(`<div class="card fb"><h2>🏁 انتهت الجلسة</h2><p>✅ ${ses.ok} صحيحة · ❌ ${ses.bad} خاطئة</p><p class="mu">الأخطاء ستعود إليك غداً تلقائياً.</p><button class="btn" style="width:100%" data-a="back">رجوع</button></div>`)}
 /* ---------- الحفظ ---------- */
 function vL(){const l=S.words.filter(w=>w.m==='l');
-if(!l.length){const nd=S.words.length;return M(`<div class="card" style="text-align:center">${nd?`لا توجد كلمات في الحفظ الآن.<br>كلماتك كلها (<b>${nd}</b>) في الإملاء، وتنتقل الكلمة إليه بعد ضغط «حفظتها» 3 مرات.<br><br><button class="btn" data-a="allto" data-t="l">رجّع كل الكلمات إلى الحفظ</button><br><br><button class="btn g" data-a="goW">كلماتي</button>`:`لا توجد كلمات بعد.<br><br><button class="btn" data-a="goW">أضف كلمات</button>`}</div>`)}
+if(!l.length){const nd=S.words.length;return M(`<div class="card" style="text-align:center">${nd?`لا توجد كلمات في الحفظ الآن.<br>كلماتك كلها (<b>${nd}</b>) في الإملاء، وتنتقل الكلمة إليه فقط عندما تضغط أنت «حفظتها».<br><br><button class="btn" data-a="allto" data-t="l">رجّع كل الكلمات إلى الحفظ</button><br><br><button class="btn g" data-a="goW">كلماتي</button>`:`لا توجد كلمات بعد.<br><br><button class="btn" data-a="goW">أضف كلمات</button>`}</div>`)}
 if(!l.find(w=>w.id===lc))lc=shuf(l)[0].id;const w=l.find(x=>x.id===lc);
-M(`<div class="card" style="text-align:center"><span class="tag">✓ ${w.k||0}/3</span> <span class="tag">في الحفظ: ${l.length}</span> <span class="tag">في الإملاء: ${S.words.length-l.length}</span>${w.lc?' <span class="tag">🧩 عنيدة</span>':''}<div class="big" style="margin:18px 0 6px">${w.w}</div><div id="ipa" class="ipa"></div><div class="mu ltr" style="text-align:center">${pt(w.w)}</div><div id="nt" class="nt"></div><div id="arm" class="arm"></div><div id="df" class="mu ltr" style="min-height:44px;margin-top:8px"></div>
+M(`<div class="card" style="text-align:center"><span class="tag">في الحفظ: ${l.length}</span> <span class="tag">في الإملاء: ${S.words.length-l.length}</span>${w.lc?' <span class="tag">🧩 عنيدة</span>':''}<div class="big" style="margin:18px 0 6px">${w.w}</div><div id="ipa" class="ipa"></div><div class="mu ltr" style="text-align:center">${pt(w.w)}</div><div id="nt" class="nt"></div><div id="arm" class="arm"></div><div id="df" class="mu ltr" style="min-height:44px;margin-top:8px"></div>
 <div class="row"><button class="btn g" data-a="lsay">🔊 استمع</button><button class="btn g" data-a="lslow">🐢 ببطء</button><button class="btn g" data-a="lsp">🔤 تهجئة</button></div><br>
-<div class="row"><button class="btn g" data-a="lprev">السابق</button><button class="btn ok" data-a="lok">حفظتها ✓</button><button class="btn g" data-a="lnx">التالي</button></div><div class="mu" style="font-size:12px;margin:6px 0 10px">اضغط «حفظتها» ${3-(w.k||0)} مرة أخرى لتنتقل هذه الكلمة إلى الإملاء</div>
+<div class="row"><button class="btn g" data-a="lprev">السابق</button><button class="btn ok" data-a="lok">حفظتها ✓</button><button class="btn g" data-a="lnx">التالي</button></div><div class="mu" style="font-size:12px;margin:6px 0 10px">لن تنتقل أي كلمة إلى الإملاء إلا إذا ضغطت أنت «حفظتها» أو «انقلها»</div>
 <button class="btn g" style="width:100%" data-a="l2d">انقلها إلى الإملاء الآن 🎯</button></div>`);
 say(w.w);arFill('#arm',w.w);ipaFill(w.w);const tk=CT;lookupS(w.w).then(r=>{if(tk!==CT)return;if(r){setNote(w.w,r);return showS(r.d)}lookup(w.w).then(r=>{if(tk!==CT)return;const e=$('#df');if(e)e.innerHTML=r?r.map(x=>`<div><b>${x[0]}.</b> ${x[1]}${x[2]?` — <i>“${x[2]}”</i>`:''}</div>`).join(''):'<span>لا يوجد تعريف لهذه الكلمة في القاموس المدمج</span>'})})}
 /* ---------- الكلمات والإحصائيات ---------- */
@@ -171,7 +171,7 @@ M(`<div class="card"><textarea id="nw" rows="4" class="ltr" placeholder="الص�
 <div class="row" style="margin-top:6px"><select id="nm"><option value="d" ${S.am==='l'?'':'selected'}>إملاء</option><option value="l" ${S.am==='l'?'selected':''}>حفظ</option></select><button class="btn" data-a="add">إضافة</button></div></div>
 <div class="card"><div class="row" style="margin-bottom:10px">${chip('all','الكل ('+S.words.length+')')}${chip('l','حفظ ('+nl+')')}${chip('d','إملاء ('+nd+')')}</div>
 ${wf==='d'&&nd?`<button class="btn g" style="width:100%;margin-bottom:8px" data-a="allto" data-t="l">نقل كل كلمات الإملاء إلى الحفظ</button>`:''}${wf==='l'&&nl?`<button class="btn g" style="width:100%;margin-bottom:8px" data-a="allto" data-t="d">نقل كل كلمات الحفظ إلى الإملاء</button>`:''}
-${L.length?L.map(w=>`<div class="w"><b>${w.w}</b><span class="tag">${w.m==='l'?'حفظ '+(w.k||0)+'/3':'إملاء · م'+(lvl(w)+1)}</span><button class="ic" data-a="wsay" data-id="${w.id}">🔊</button><button class="ic" data-a="wmv" data-id="${w.id}">⇄</button><button class="ic" data-a="wdel" data-id="${w.id}">🗑</button></div>`).join(''):'لا توجد كلمات هنا'}</div>`)}
+${L.length?L.map(w=>`<div class="w"><b>${w.w}</b><span class="tag">${w.m==='l'?'حفظ':'إملاء · م'+(lvl(w)+1)}</span><button class="ic" data-a="wsay" data-id="${w.id}">🔊</button><button class="ic" data-a="wmv" data-id="${w.id}">⇄</button><button class="ic" data-a="wdel" data-id="${w.id}">🗑</button></div>`).join(''):'لا توجد كلمات هنا'}</div>`)}
 function vM(){const n=dn(),d=S.words.filter(w=>w.m==='d'),t=d.reduce((a,w)=>a+(w.t||0),0),ok=d.reduce((a,w)=>a+(w.ok||0),0),top=Object.entries(S.err).sort((a,b)=>b[1]-a[1]).slice(0,3);pickVoice();
 M(`<div class="card"><div class="row" style="text-align:center"><div><div class="big" style="font-size:28px">🔥${S.streak}</div>أيام</div><div><div class="big" style="font-size:28px">${S.log[n]||0}</div>اليوم</div><div><div class="big" style="font-size:28px">${t?Math.round(ok/t*100):0}%</div>الدقة</div></div></div>
 <div class="card">الكلمات: ${S.words.length} (حفظ ${S.words.length-d.length} · إملاء ${d.length}) · مستحقة اليوم: ${d.filter(w=>w.due<=n).length}</div>
@@ -200,13 +200,14 @@ if(!ok&&!c.leech&&!ses.rt[w.id]){ses.rt[w.id]=1;ses.q.push(w.id)}
 if(navigator.vibrate)navigator.vibrate(ok?30:[60,40,60]);say(w.w);vQ();break}
 case'nx':ses.i++;nextQ();break;
 case'lsay':say(LW().w);break;case'lslow':say(LW().w,.5);break;case'lsp':spell(LW().w);break;
-case'lok':{const w=LW();w.k=(w.k||0)+1;if(w.k>=3){mv(w,'d');w.lc=0;toast('🎯 انتقلت «'+w.w+'» إلى الإملاء')}else save();next();break}
+case'lok':{const w=LW();mv(w,'d');w.lc=0;toast('🎯 انتقلت «'+w.w+'» إلى الإملاء',()=>{w.m='l';w.k=0;save();lc=w.id;render()});next();break}
 case'lnx':next();break;
 case'lprev':{let ok=false;while(lh.length){const id2=lh.pop();if(S.words.some(x=>x.id===id2&&x.m==='l')){lc=id2;ok=true;break}}if(ok)render();else toast('هذه أول بطاقة');break}
-case'l2d':{const w=LW();mv(w,'d');toast('🎯 انتقلت «'+w.w+'» إلى الإملاء');next();break}
+case'l2d':{const w=LW();mv(w,'d');toast('🎯 انتقلت «'+w.w+'» إلى الإملاء',()=>{w.m='l';w.k=0;save();lc=w.id;render()});next();break}
 case'add':{const m=$('#nm').value,have=new Set(S.words.map(w=>w.w));S.am=m;
 const ws=[...new Set($('#nw').value.split(/[\n,;،]+/).map(x=>x.trim().toLowerCase().replace(/[^a-z]/g,'')).filter(x=>x.length>1&&!have.has(x)))];
 ws.forEach(w=>S.words.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),w,m,due:dn(),b:0,k:0}));save();toast(ws.length?`أُضيفت ${ws.length} كلمة إلى ${m==='l'?'الحفظ':'الإملاء'}`:'لا كلمات جديدة');vW();break}
+case'lee2l':{const w=cur&&cur.w;if(w){mv(w,'l');w.s=null;save();toast('🧩 انتقلت «'+w.w+'» إلى الحفظ',()=>{w.m='d';save()});b.disabled=true}break}
 case'wf':wf=b.dataset.f;vW();break;
 case'allto':{const t=b.dataset.t,g=S.words.filter(x=>x.m===(t==='l'?'d':'l'));if(!g.length)break;if(confirm('نقل '+g.length+' كلمة إلى '+(t==='l'?'الحفظ':'الإملاء')+'؟')){g.forEach(x=>{x.m=t;x.k=0;x.due=dn()});save();toast('تم نقل '+g.length+' كلمة');render()}break}
 case'wsay':say(W().w);break;
