@@ -62,7 +62,7 @@ try{Object.assign(S,JSON.parse(localStorage.getItem('sm1')||'{}'))}catch(e){}
 S.err=S.err||{};S.ret=S.ret||.9;
 const save=()=>{try{localStorage.setItem('sm1',JSON.stringify(S))}catch(e){}};
 const shuf=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
-let tab='p',ses=null,cur=null,lc=null,voice=null,lh=[];
+let tab='p',ses=null,cur=null,lc=null,voice=null,lh=[],lq=[],wf='all';
 /* ---------- الصوت ---------- */
 const NT=()=>{const C=window.Capacitor;if(!(C&&C.nativePromise&&C.isNativePlatform&&C.isNativePlatform()))return null;return NT.p||(NT.p={speak:o=>C.nativePromise('TextToSpeech','speak',o),isLanguageSupported:o=>C.nativePromise('TextToSpeech','isLanguageSupported',o),getSupportedLanguages:()=>C.nativePromise('TextToSpeech','getSupportedLanguages',{})})};let nok=null,LANGX='en-US';
 const errm=e=>String((e&&(e.message||e.errorMessage))||e||''),VD=[1500,2000,3000,4000],LC=['en-US','en-GB','en'];
@@ -157,17 +157,21 @@ if(c.res)arFill('#arf',w);if(c.lv&&!c.res)setTimeout(()=>{const t=$('#ti');t&&t.
 function vEnd(){M(`<div class="card fb"><h2>🏁 انتهت الجلسة</h2><p>✅ ${ses.ok} صحيحة · ❌ ${ses.bad} خاطئة</p><p class="mu">الأخطاء ستعود إليك غداً تلقائياً.</p><button class="btn" style="width:100%" data-a="back">رجوع</button></div>`)}
 /* ---------- الحفظ ---------- */
 function vL(){const l=S.words.filter(w=>w.m==='l');
-if(!l.length)return M(`<div class="card" style="text-align:center">لا توجد كلمات للحفظ.<br><br><button class="btn" data-a="goW">أضف كلمات</button></div>`);
+if(!l.length){const nd=S.words.length;return M(`<div class="card" style="text-align:center">${nd?`لا توجد كلمات في الحفظ الآن.<br>كلماتك كلها (<b>${nd}</b>) في الإملاء، وتنتقل الكلمة إليه بعد ضغط «حفظتها» 3 مرات.<br><br><button class="btn" data-a="allto" data-t="l">رجّع كل الكلمات إلى الحفظ</button><br><br><button class="btn g" data-a="goW">كلماتي</button>`:`لا توجد كلمات بعد.<br><br><button class="btn" data-a="goW">أضف كلمات</button>`}</div>`)}
 if(!l.find(w=>w.id===lc))lc=shuf(l)[0].id;const w=l.find(x=>x.id===lc);
-M(`<div class="card" style="text-align:center"><span class="tag">${w.k||0}/3 ✓</span>${w.lc?' <span class="tag">🧩 عنيدة</span>':''}<div class="big" style="margin:18px 0 6px">${w.w}</div><div id="ipa" class="ipa"></div><div class="mu ltr" style="text-align:center">${pt(w.w)}</div><div id="nt" class="nt"></div><div id="arm" class="arm"></div><div id="df" class="mu ltr" style="min-height:44px;margin-top:8px"></div>
+M(`<div class="card" style="text-align:center"><span class="tag">✓ ${w.k||0}/3</span> <span class="tag">في الحفظ: ${l.length}</span> <span class="tag">في الإملاء: ${S.words.length-l.length}</span>${w.lc?' <span class="tag">🧩 عنيدة</span>':''}<div class="big" style="margin:18px 0 6px">${w.w}</div><div id="ipa" class="ipa"></div><div class="mu ltr" style="text-align:center">${pt(w.w)}</div><div id="nt" class="nt"></div><div id="arm" class="arm"></div><div id="df" class="mu ltr" style="min-height:44px;margin-top:8px"></div>
 <div class="row"><button class="btn g" data-a="lsay">🔊 استمع</button><button class="btn g" data-a="lslow">🐢 ببطء</button><button class="btn g" data-a="lsp">🔤 تهجئة</button></div><br>
-<div class="row"><button class="btn g" data-a="lprev">السابق</button><button class="btn ok" data-a="lok">حفظتها ✓</button><button class="btn g" data-a="lnx">التالي</button></div><br>
+<div class="row"><button class="btn g" data-a="lprev">السابق</button><button class="btn ok" data-a="lok">حفظتها ✓</button><button class="btn g" data-a="lnx">التالي</button></div><div class="mu" style="font-size:12px;margin:6px 0 10px">اضغط «حفظتها» ${3-(w.k||0)} مرة أخرى لتنتقل هذه الكلمة إلى الإملاء</div>
 <button class="btn g" style="width:100%" data-a="l2d">انقلها إلى الإملاء الآن 🎯</button></div>`);
 say(w.w);arFill('#arm',w.w);ipaFill(w.w);const tk=CT;lookupS(w.w).then(r=>{if(tk!==CT)return;if(r){setNote(w.w,r);return showS(r.d)}lookup(w.w).then(r=>{if(tk!==CT)return;const e=$('#df');if(e)e.innerHTML=r?r.map(x=>`<div><b>${x[0]}.</b> ${x[1]}${x[2]?` — <i>“${x[2]}”</i>`:''}</div>`).join(''):'<span>لا يوجد تعريف لهذه الكلمة في القاموس المدمج</span>'})})}
 /* ---------- الكلمات والإحصائيات ---------- */
-function vW(){M(`<div class="card"><textarea id="nw" rows="4" class="ltr" placeholder="الصق الكلمات: كلمة في كل سطر أو مفصولة بفواصل"></textarea>
-<div class="row" style="margin-top:10px"><select id="nm"><option value="d">إملاء</option><option value="l">حفظ</option></select><button class="btn" data-a="add">إضافة</button></div></div>
-<div class="card">${S.words.length?S.words.map(w=>`<div class="w"><b>${w.w}</b><span class="tag">${w.m==='l'?'حفظ':'إملاء · م'+(lvl(w)+1)}</span><button class="ic" data-a="wsay" data-id="${w.id}">🔊</button><button class="ic" data-a="wmv" data-id="${w.id}">⇄</button><button class="ic" data-a="wdel" data-id="${w.id}">🗑</button></div>`).join(''):'لا توجد كلمات بعد'}</div>`)}
+function vW(){const nl=S.words.filter(w=>w.m==='l').length,nd=S.words.length-nl,L=S.words.filter(w=>wf==='all'||w.m===wf),chip=(f,t)=>`<button class="btn ${wf===f?'':'g'}" style="padding:8px 4px;font-size:14px" data-a="wf" data-f="${f}">${t}</button>`;
+M(`<div class="card"><textarea id="nw" rows="4" class="ltr" placeholder="الصق الكلمات: كلمة في كل سطر أو مفصولة بفواصل"></textarea>
+<div class="mu" style="font-size:12px;margin-top:8px">أضف الكلمات إلى:</div>
+<div class="row" style="margin-top:6px"><select id="nm"><option value="d" ${S.am==='l'?'':'selected'}>إملاء</option><option value="l" ${S.am==='l'?'selected':''}>حفظ</option></select><button class="btn" data-a="add">إضافة</button></div></div>
+<div class="card"><div class="row" style="margin-bottom:10px">${chip('all','الكل ('+S.words.length+')')}${chip('l','حفظ ('+nl+')')}${chip('d','إملاء ('+nd+')')}</div>
+${wf==='d'&&nd?`<button class="btn g" style="width:100%;margin-bottom:8px" data-a="allto" data-t="l">نقل كل كلمات الإملاء إلى الحفظ</button>`:''}${wf==='l'&&nl?`<button class="btn g" style="width:100%;margin-bottom:8px" data-a="allto" data-t="d">نقل كل كلمات الحفظ إلى الإملاء</button>`:''}
+${L.length?L.map(w=>`<div class="w"><b>${w.w}</b><span class="tag">${w.m==='l'?'حفظ '+(w.k||0)+'/3':'إملاء · م'+(lvl(w)+1)}</span><button class="ic" data-a="wsay" data-id="${w.id}">🔊</button><button class="ic" data-a="wmv" data-id="${w.id}">⇄</button><button class="ic" data-a="wdel" data-id="${w.id}">🗑</button></div>`).join(''):'لا توجد كلمات هنا'}</div>`)}
 function vM(){const n=dn(),d=S.words.filter(w=>w.m==='d'),t=d.reduce((a,w)=>a+(w.t||0),0),ok=d.reduce((a,w)=>a+(w.ok||0),0),top=Object.entries(S.err).sort((a,b)=>b[1]-a[1]).slice(0,3);pickVoice();
 M(`<div class="card"><div class="row" style="text-align:center"><div><div class="big" style="font-size:28px">🔥${S.streak}</div>أيام</div><div><div class="big" style="font-size:28px">${S.log[n]||0}</div>اليوم</div><div><div class="big" style="font-size:28px">${t?Math.round(ok/t*100):0}%</div>الدقة</div></div></div>
 <div class="card">الكلمات: ${S.words.length} (حفظ ${S.words.length-d.length} · إملاء ${d.length}) · مستحقة اليوم: ${d.filter(w=>w.due<=n).length}</div>
@@ -178,7 +182,7 @@ M(`<div class="card"><div class="row" style="text-align:center"><div><div class=
 /* ---------- الأحداث ---------- */
 document.addEventListener('click',e=>{
 const nb=e.target.closest('nav button');if(nb){tab=nb.dataset.t;return render()}
-const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,id=b.dataset.id,W=()=>S.words.find(x=>x.id===id),LW=()=>S.words.find(x=>x.id===lc),next=()=>{const l=S.words.filter(w=>w.m==='l'&&w.id!==lc);if(l.length){if(lc){lh.push(lc);if(lh.length>100)lh.shift()}lc=shuf(l)[0].id}render()};
+const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,id=b.dataset.id,W=()=>S.words.find(x=>x.id===id),LW=()=>S.words.find(x=>x.id===lc),next=()=>{const ok=new Set(S.words.filter(w=>w.m==='l').map(w=>w.id));lq=lq.filter(i=>ok.has(i)&&i!==lc);if(!lq.length)lq=shuf([...ok].filter(i=>i!==lc));if(lq.length){if(lc){lh.push(lc);if(lh.length>100)lh.shift()}lc=lq.shift()}render()};
 switch(a){
 case'start':startSession(false);break;case'force':startSession(true);break;case'goW':tab='w';render();break;
 case'back':ses=null;cur=null;render();break;
@@ -196,13 +200,15 @@ if(!ok&&!c.leech&&!ses.rt[w.id]){ses.rt[w.id]=1;ses.q.push(w.id)}
 if(navigator.vibrate)navigator.vibrate(ok?30:[60,40,60]);say(w.w);vQ();break}
 case'nx':ses.i++;nextQ();break;
 case'lsay':say(LW().w);break;case'lslow':say(LW().w,.5);break;case'lsp':spell(LW().w);break;
-case'lok':{const w=LW();w.k=(w.k||0)+1;if(w.k>=3){mv(w,'d');w.lc=0;toast('🎯 انتقلت إلى الإملاء')}else save();next();break}
+case'lok':{const w=LW();w.k=(w.k||0)+1;if(w.k>=3){mv(w,'d');w.lc=0;toast('🎯 انتقلت «'+w.w+'» إلى الإملاء')}else save();next();break}
 case'lnx':next();break;
 case'lprev':{let ok=false;while(lh.length){const id2=lh.pop();if(S.words.some(x=>x.id===id2&&x.m==='l')){lc=id2;ok=true;break}}if(ok)render();else toast('هذه أول بطاقة');break}
-case'l2d':mv(LW(),'d');toast('🎯 انتقلت إلى الإملاء');next();break;
-case'add':{const m=$('#nm').value,have=new Set(S.words.map(w=>w.w));
+case'l2d':{const w=LW();mv(w,'d');toast('🎯 انتقلت «'+w.w+'» إلى الإملاء');next();break}
+case'add':{const m=$('#nm').value,have=new Set(S.words.map(w=>w.w));S.am=m;
 const ws=[...new Set($('#nw').value.split(/[\n,;،]+/).map(x=>x.trim().toLowerCase().replace(/[^a-z]/g,'')).filter(x=>x.length>1&&!have.has(x)))];
-ws.forEach(w=>S.words.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),w,m,due:dn(),b:0,k:0}));save();toast(ws.length?`أُضيفت ${ws.length} كلمة`:'لا كلمات جديدة');vW();break}
+ws.forEach(w=>S.words.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),w,m,due:dn(),b:0,k:0}));save();toast(ws.length?`أُضيفت ${ws.length} كلمة إلى ${m==='l'?'الحفظ':'الإملاء'}`:'لا كلمات جديدة');vW();break}
+case'wf':wf=b.dataset.f;vW();break;
+case'allto':{const t=b.dataset.t,g=S.words.filter(x=>x.m===(t==='l'?'d':'l'));if(!g.length)break;if(confirm('نقل '+g.length+' كلمة إلى '+(t==='l'?'الحفظ':'الإملاء')+'؟')){g.forEach(x=>{x.m=t;x.k=0;x.due=dn()});save();toast('تم نقل '+g.length+' كلمة');render()}break}
 case'wsay':say(W().w);break;
 case'wmv':{const w=W();mv(w,w.m==='d'?'l':'d');vW();break}
 case'wdel':S.words=S.words.filter(x=>x.id!==id);save();vW();break;
@@ -215,7 +221,7 @@ document.addEventListener('input',e=>{const t=e.target,i=t.id;
 if(i==='rt'){S.rate=+t.value;save()}
 else if(i==='rr'){S.ret=t.value/100;$('#rv').textContent=t.value+'%';save()}
 else if(i==='ti'&&cur){cur.val=t.value.toLowerCase().replace(/[^a-z]/g,'');if(cur.lv===1)$('#sl').innerHTML=sh(chars(cur),null)}
-else if(i==='cp'&&cur){const b=$('#nxb');if(b)b.disabled=t.value.trim().toLowerCase()!==cur.w.w}});
+else if(i==='cp'&&cur){const b=$('#nxb');if(b)b.disabled=t.value.trim().toLowerCase()!==cur.w.w}else if(i==='nm'){S.am=t.value;save()}});
 document.addEventListener('keydown',e=>{if(e.key!=='Enter')return;if(e.target.id==='ti'){const b=document.querySelector('[data-a=chk]');b&&b.click()}if(e.target.id==='cp'){const b=$('#nxb');if(b&&!b.disabled)b.click()}});
 function impT(t){try{const j=JSON.parse(t);if(!Array.isArray(j.words))throw 0;S=Object.assign(S,j);S.err=S.err||{};save();toast('تم الاستيراد');render()}catch(x){toast('نسخة غير صالحة')}}
 $('#fi').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>impT(r.result);r.readAsText(f)});
