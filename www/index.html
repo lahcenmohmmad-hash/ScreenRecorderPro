@@ -185,9 +185,9 @@ ${wf==='d'&&nd?`<button class="btn g" style="width:100%;margin-bottom:8px" data-
 <div id="wl">${wlist()}</div></div>`)}
 /* ---------- قائمة اختيار كلمة معيّنة ---------- */
 function openWord(id){const w=S.words.find(x=>x.id===id);if(!w)return;if(w.m==='l'){tab='l';if(lc&&lc!==id)lh.push(lc);lc=id;lq=lq.filter(x=>x!==id);render()}else{tab='p';cur=null;ses={q:[id],i:0,ok:0,bad:0,rt:{}};nextQ()}}
-function pickList(){const m=PQ.m,q=PQ.q,all=S.words.filter(w=>w.m===m).sort((a,b)=>a.w.localeCompare(b.w)),L=q?all.filter(w=>w.w.includes(q)):all,sh=L.slice(0,300);
-$('#pc').textContent=(m==='l'?'كلمات الحفظ: ':'كلمات الإملاء: ')+all.length+(q?' · المطابق: '+L.length:'')+(L.length>300?' · يُعرض أول 300، اكتب للبحث':'');
-$('#pl').innerHTML=sh.length?sh.map(w=>`<button class="pi ${m==='l'&&w.id===lc?'on':''}" data-a="pkpick" data-id="${w.id}"><span>${w.w}</span><span class="mu" style="font-size:13px">${m==='l'?(w.lc?'🧩':''):'م'+(lvl(w)+1)}</span></button>`).join(''):'<div class="mu" style="text-align:center;padding:30px">لا توجد كلمات مطابقة</div>'}
+function pickList(){const m=PQ.m,q=PQ.q,all=S.words.filter(w=>w.m===m),L=all.map((w,i)=>[w,i+1]).filter(([w])=>!q||w.w.includes(q)),sh=L.slice(0,300);
+$('#pc').textContent=(m==='l'?'كلمات الحفظ: ':'كلمات الإملاء: ')+all.length+' (بترتيب الإدخال)'+(q?' · المطابق: '+L.length:'')+(L.length>300?' · يُعرض أول 300، اكتب للبحث':'');
+$('#pl').innerHTML=sh.length?sh.map(([w,n])=>`<button class="pi ${m==='l'&&w.id===lc?'on':''}" data-a="pkpick" data-id="${w.id}"><span class="mu" style="width:44px;font-size:13px;flex:none">${n}</span><span style="flex:1">${w.w}</span><span class="mu" style="font-size:13px">${m==='l'?(w.lc?'🧩':''):'م'+(lvl(w)+1)}</span></button>`).join(''):'<div class="mu" style="text-align:center;padding:30px">لا توجد كلمات مطابقة</div>'}
 function openPick(m){PQ={m,q:''};const o0=$('#pk');if(o0)o0.remove();const o=document.createElement('div');o.id='pk';o.className='sheet';
 o.innerHTML='<div class="top"><button class="btn g" data-a="pkx" style="padding:10px 16px">✕</button><input id="pq" class="ti" style="font-size:16px;padding:10px" placeholder="ابحث عن كلمة" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false" dir="ltr"></div><div class="mu" id="pc" style="padding:8px 16px;font-size:13px"></div><div class="lst" id="pl"></div>';
 document.body.append(o);pickList();const cur0=o.querySelector('.pi.on');if(cur0&&cur0.scrollIntoView)cur0.scrollIntoView({block:'center'})}
