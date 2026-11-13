@@ -1,0 +1,61 @@
+name: Build Japanese APK
+on:
+  push:
+    branches: [japanese]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Build dictionaries and Android project
+        run: |
+          npm install
+          python3 scripts/build-ar.py
+          python3 scripts/build-ja.py
+          npx cap add android
+      - name: App icon
+        run: |
+          pip install pillow --quiet
+          python3 scripts/make-icons.py
+      - name: Stable signing key
+        env:
+          KS: ${{ secrets.DEBUG_KEYSTORE_B64 }}
+        run: |
+          echo "$KS" | base64 -d > android/app/stable-debug.keystore
+          cat >> android/app/build.gradle <<'EOF2'
+
+          android {
+              signingConfigs {
+                  debug {
+                      storeFile file('stable-debug.keystore')
+                      storePassword 'android'
+                      keyAlias 'androiddebugkey'
+                      keyPassword 'android'
+                  }
+              }
+          }
+          EOF2
+      - name: Build debug APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon > ../build.log 2>&1 || { echo "::error::$(tail -n 40 ../build.log | head -c 3500 | tr '\n' '~')"; exit 1; }
+      - name: Prepare APK
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk SpellMaster-Japanese.apk
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ja-${{ github.run_number }}
+          name: SpellMaster Japanese #${{ github.run_number }}
+          make_latest: false
+          files: SpellMaster-Japanese.apk
