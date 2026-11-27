@@ -4,3 +4,5 @@
 - **JMdict** © EDRDG (https://www.edrdg.org/) — القاموس الياباني-الإنجليزي (رخصة EDRDG)، بصيغة JSON من مشروع jmdict-simplified.
 - **المعاني العربية** مشتقة عبر الإنجليزية من: koreader-dicts en-ar وar-en (CC BY-SA 4.0)، وArabic WordNet 4.1 (CC BY 4.0)، وOpen English WordNet 2024 (CC BY 4.0). وهي **مشتقة وقد تحتوي أخطاء**.
 - النطق: صوت الهاتف الياباني (ja-JP) عبر @capacitor-community/text-to-speech.
+
+> كل شيفرة التطبيق داخل `www/index.html` (لا يوجد مصدر منفصل).
