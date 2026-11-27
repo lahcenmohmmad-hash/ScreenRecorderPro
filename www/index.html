@@ -167,8 +167,8 @@ function vEnd(){M(`<div class="card fb"><h2>🏁 انتهت الجلسة</h2><p>
 /* ---------- الحفظ ---------- */
 function vL(){const l=S.words.filter(w=>w.m==='l');
 if(!l.length){const nd=S.words.length;return M(`<div class="card" style="text-align:center">${nd?`لا توجد كلمات في الحفظ الآن.<br>كلماتك كلها (<b>${nd}</b>) في الإملاء، وتنتقل الكلمة إليه فقط عندما تضغط أنت «حفظتها».<br><br><button class="btn" data-a="allto" data-t="l">رجّع كل الكلمات إلى الحفظ</button><br><br><button class="btn g" data-a="goW">كلماتي</button>`:`لا توجد كلمات بعد.<br><br><button class="btn" data-a="goW">أضف كلمات</button>`}</div>`)}
-if(!l.find(w=>w.id===lc))lc=shuf(l)[0].id;const w=l.find(x=>x.id===lc);
-M(`<button class="btn g" style="width:100%;margin-bottom:10px" data-a="pkopen" data-m="l">📋 اختر كلمة من القائمة (${l.length})</button><div class="card" style="text-align:center"><span class="tag">في الحفظ: ${l.length}</span> <span class="tag">في الإملاء: ${S.words.length-l.length}</span>${w.lc?' <span class="tag">🧩 عنيدة</span>':''}<div class="stk"><div class="big fw" data-fs="36" style="margin:0">${w.w}</div></div><div id="ipa" class="ipa"></div><div class="mu ltr" style="text-align:center">${pt(w.w)}</div><div id="nt" class="nt"></div><div id="arm" class="arm"></div><div id="df" class="mu ltr" style="min-height:44px;margin-top:8px"></div>
+if(!l.find(w=>w.id===lc))lc=l[l.length-1].id;const w=l.find(x=>x.id===lc);
+M(`<button class="btn g" style="width:100%;margin-bottom:10px" data-a="pkopen" data-m="l">📋 اختر كلمة من القائمة (${l.length})</button><div class="card" style="text-align:center"><span class="tag">الكلمة ${l.length-l.findIndex(x=>x.id===lc)} من ${l.length} (الأحدث أولاً)</span> <span class="tag">في الإملاء: ${S.words.length-l.length}</span>${w.lc?' <span class="tag">🧩 عنيدة</span>':''}<div class="stk"><div class="big fw" data-fs="36" style="margin:0">${w.w}</div></div><div id="ipa" class="ipa"></div><div class="mu ltr" style="text-align:center">${pt(w.w)}</div><div id="nt" class="nt"></div><div id="arm" class="arm"></div><div id="df" class="mu ltr" style="min-height:44px;margin-top:8px"></div>
 <div class="row"><button class="btn g" data-a="lsay">🔊 استمع</button><button class="btn g" data-a="lslow">🐢 ببطء</button><button class="btn g" data-a="lsp">🔤 تهجئة</button></div><br>
 <div class="row"><button class="btn g" data-a="lprev">السابق</button><button class="btn ok" data-a="lok">حفظتها ✓</button><button class="btn g" data-a="lnx">التالي</button></div><div class="mu" style="font-size:12px;margin:6px 0 10px">لن تنتقل أي كلمة إلى الإملاء إلا إذا ضغطت أنت «حفظتها» أو «انقلها»</div>
 <button class="btn g" style="width:100%" data-a="l2d">انقلها إلى الإملاء الآن 🎯</button></div>`);
@@ -184,7 +184,8 @@ M(`<div class="card"><textarea id="nw" rows="4" class="ltr" placeholder="الص�
 ${wf==='d'&&nd?`<button class="btn g" style="width:100%;margin-bottom:8px" data-a="allto" data-t="l">نقل كل كلمات الإملاء إلى الحفظ</button>`:''}${wf==='l'&&nl?`<button class="btn g" style="width:100%;margin-bottom:8px" data-a="allto" data-t="d">نقل كل كلمات الحفظ إلى الإملاء</button>`:''}
 <div id="wl">${wlist()}</div></div>`)}
 /* ---------- قائمة اختيار كلمة معيّنة ---------- */
-function openWord(id){const w=S.words.find(x=>x.id===id);if(!w)return;if(w.m==='l'){tab='l';if(lc&&lc!==id)lh.push(lc);lc=id;lq=lq.filter(x=>x!==id);render()}else{tab='p';cur=null;ses={q:[id],i:0,ok:0,bad:0,rt:{}};nextQ()}}
+const lorder=()=>S.words.filter(w=>w.m==='l').reverse();
+function openWord(id){const w=S.words.find(x=>x.id===id);if(!w)return;if(w.m==='l'){tab='l';lc=id;render()}else{tab='p';cur=null;ses={q:[id],i:0,ok:0,bad:0,rt:{}};nextQ()}}
 function pickList(){const m=PQ.m,q=PQ.q,all=S.words.filter(w=>w.m===m),L=all.map((w,i)=>[w,i+1]).filter(([w])=>!q||w.w.includes(q)),sh=L.slice(0,300);
 $('#pc').textContent=(m==='l'?'كلمات الحفظ: ':'كلمات الإملاء: ')+all.length+' (بترتيب الإدخال)'+(q?' · المطابق: '+L.length:'')+(L.length>300?' · يُعرض أول 300، اكتب للبحث':'');
 $('#pl').innerHTML=sh.length?sh.map(([w,n])=>`<button class="pi ${m==='l'&&w.id===lc?'on':''}" data-a="pkpick" data-id="${w.id}"><span class="mu" style="width:44px;font-size:13px;flex:none">${n}</span><span style="flex:1">${w.w}</span><span class="mu" style="font-size:13px">${m==='l'?(w.lc?'🧩':''):'م'+(lvl(w)+1)}</span></button>`).join(''):'<div class="mu" style="text-align:center;padding:30px">لا توجد كلمات مطابقة</div>'}
@@ -201,7 +202,7 @@ M(`<div class="card"><div class="row" style="text-align:center"><div><div class=
 /* ---------- الأحداث ---------- */
 document.addEventListener('click',e=>{
 const nb=e.target.closest('nav button');if(nb){tab=nb.dataset.t;return render()}
-const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,id=b.dataset.id,W=()=>S.words.find(x=>x.id===id),LW=()=>S.words.find(x=>x.id===lc),next=()=>{const ok=new Set(S.words.filter(w=>w.m==='l').map(w=>w.id));lq=lq.filter(i=>ok.has(i)&&i!==lc);if(!lq.length)lq=shuf([...ok].filter(i=>i!==lc));if(lq.length){if(lc){lh.push(lc);if(lh.length>100)lh.shift()}lc=lq.shift()}render()};
+const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,id=b.dataset.id,W=()=>S.words.find(x=>x.id===id),LW=()=>S.words.find(x=>x.id===lc),next=()=>{const L=lorder();if(L.length){const i=L.findIndex(w=>w.id===lc);if(i===L.length-1&&L.length>1)toast('انتهت القائمة — عدنا إلى أحدث كلمة');lc=L[(i+1)%L.length].id}render()};
 switch(a){
 case'start':startSession(false);break;case'force':startSession(true);break;case'goW':tab='w';render();break;
 case'back':ses=null;cur=null;render();break;
@@ -219,13 +220,13 @@ if(!ok&&!c.leech&&!ses.rt[w.id]){ses.rt[w.id]=1;ses.q.push(w.id)}
 if(navigator.vibrate)navigator.vibrate(ok?30:[60,40,60]);say(w.w);vQ();break}
 case'nx':ses.i++;nextQ();break;
 case'lsay':say(LW().w);break;case'lslow':say(LW().w,.5);break;case'lsp':spell(LW().w);break;
-case'lok':{const w=LW();mv(w,'d');w.lc=0;toast('🎯 انتقلت «'+w.w+'» إلى الإملاء',()=>{w.m='l';w.k=0;save();lc=w.id;render()});next();break}
+case'lok':{const w=LW(),i0=lorder().findIndex(x=>x.id===w.id);mv(w,'d');w.lc=0;toast('🎯 انتقلت «'+w.w+'» إلى الإملاء',()=>{w.m='l';w.k=0;save();lc=w.id;render()});const L1=lorder();if(L1.length)lc=L1[i0<L1.length?i0:0].id;render();break}
 case'lnx':next();break;
-case'lprev':{let ok=false;while(lh.length){const id2=lh.pop();if(S.words.some(x=>x.id===id2&&x.m==='l')){lc=id2;ok=true;break}}if(ok)render();else toast('هذه أول بطاقة');break}
-case'l2d':{const w=LW();mv(w,'d');toast('🎯 انتقلت «'+w.w+'» إلى الإملاء',()=>{w.m='l';w.k=0;save();lc=w.id;render()});next();break}
+case'lprev':{const L=lorder(),i=L.findIndex(w=>w.id===lc);if(i>0){lc=L[i-1].id;render()}else toast('هذه أحدث كلمة');break}
+case'l2d':{const w=LW(),i0=lorder().findIndex(x=>x.id===w.id);mv(w,'d');toast('🎯 انتقلت «'+w.w+'» إلى الإملاء',()=>{w.m='l';w.k=0;save();lc=w.id;render()});const L1=lorder();if(L1.length)lc=L1[i0<L1.length?i0:0].id;render();break}
 case'add':{const m=$('#nm').value,have=new Set(S.words.map(w=>w.w));S.am=m;
 const ws=[...new Set($('#nw').value.split(/[\n,;،]+/).map(x=>x.trim().toLowerCase().replace(/[^a-z]/g,'')).filter(x=>x.length>1&&!have.has(x)))];
-ws.forEach(w=>S.words.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),w,m,due:dn(),b:0,k:0}));save();toast(ws.length?`أُضيفت ${ws.length} كلمة إلى ${m==='l'?'الحفظ':'الإملاء'}`:'لا كلمات جديدة');vW();break}
+ws.forEach(w=>S.words.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),w,m,due:dn(),b:0,k:0}));if(m==='l'&&ws.length)lc=S.words[S.words.length-1].id;save();toast(ws.length?`أُضيفت ${ws.length} كلمة إلى ${m==='l'?'الحفظ':'الإملاء'}`:'لا كلمات جديدة');vW();break}
 case'lee2l':{const w=cur&&cur.w;if(w){mv(w,'l');w.s=null;save();toast('🧩 انتقلت «'+w.w+'» إلى الحفظ',()=>{w.m='d';save()});b.disabled=true}break}
 case'wf':wf=b.dataset.f;vW();break;
 case'allto':{const t=b.dataset.t,g=S.words.filter(x=>x.m===(t==='l'?'d':'l'));if(!g.length)break;if(confirm('نقل '+g.length+' كلمة إلى '+(t==='l'?'الحفظ':'الإملاء')+'؟')){g.forEach(x=>{x.m=t;x.k=0;x.due=dn()});save();toast('تم نقل '+g.length+' كلمة');render()}break}
